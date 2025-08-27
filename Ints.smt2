@@ -12,7 +12,7 @@
         (- Int Int Int :left-assoc)   ; subtraction
         (+ Int Int Int :left-assoc)
         (* Int Int Int :left-assoc)
-        (** Int Int Int :right-assoc) ; exponentiation
+        (^ Int Int Int :right-assoc) ; exponentiation
         (div Int Int Int :left-assoc)
         (mod Int Int Int)
         (abs Int Int)
@@ -56,9 +56,8 @@
             (and (= m (+ (* n q) r))
                  (<= 0 r (- (abs n) 1))))))
 
-  - ** as exponentiation if the second argument is non-negative, and as 0,
-    otherwise, i.e., (** n m) is n^m if m is non-negative and 0 if m is
-    negative,
+  - ^ as exponentiation if the second argument is non-negative, and as 0,
+    otherwise
 
   - the other function symbols of Ints as expected.
 
