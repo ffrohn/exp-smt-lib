@@ -1,0 +1,223 @@
+\documentclass{article}
+
+\usepackage{url}
+\usepackage{hyperref}
+\usepackage{listings}
+\usepackage{xcolor}
+
+\definecolor{codegreen}{rgb}{0,0.6,0}
+\definecolor{codegray}{rgb}{0.5,0.5,0.5}
+\definecolor{codepurple}{rgb}{0.58,0,0.82}
+\definecolor{backcolour}{rgb}{0.95,0.95,0.92}
+
+\lstdefinestyle{mystyle}{
+    backgroundcolor=\color{backcolour},
+    commentstyle=\color{codegreen},
+    keywordstyle=\color{magenta},
+    numberstyle=\tiny\color{codegray},
+    stringstyle=\color{codepurple},
+    basicstyle=\ttfamily\footnotesize,
+    breakatwhitespace=false,
+    breaklines=true,
+    captionpos=b,
+    keepspaces=true,
+    numbers=left,
+    numbersep=5pt,
+    showspaces=false,
+    showstringspaces=false,
+    showtabs=false,
+    tabsize=2
+}
+\lstset{style=mystyle}
+
+\hypersetup{%
+  pdftitle={SMT-LIB Proposal: Integer Arithmetic with Exponentials},
+  colorlinks=true,
+  linkcolor=blue,
+  citecolor=olive,
+  filecolor=magenta,
+  urlcolor=cyan
+}
+
+\bibliographystyle{plainurl}
+
+\title{SMT-LIB Proposal: Integer Arithmetic with Exponentials}
+
+\begin{document}
+
+\maketitle
+
+\section{Introduction}
+
+We propose to extend the SMT-LIB theory {\tt Ints} with exponentiation.
+%
+Such an extension is motivated by various use cases, e.g.:
+%
+\begin{itemize}
+\item SMT with parametric bit-vectors \cite{bitvec}
+\item automatic verification of infinite state systems \cite{swine}
+\item automatic verification of solutions for recurrence equations \cite{swine2}
+\item deductive verification with Caesar \cite{caesar}\footnote{\url{https://github.com/ffrohn/exp-smt-lib/issues/5\#issuecomment-3233893588}}
+\end{itemize}
+
+\section{Proposal}
+
+The following proposal is based on the SMT-LIB theory {\tt Ints}.\footnote{\url{https://smt-lib.org/theories-Ints.shtml}}
+
+\begin{lstlisting}[language=Lisp]
+(theory Ints
+
+ :sorts ((Int 0))
+
+ :funs ((NUMERAL Int)
+        (- Int Int)                   ; negation
+        (- Int Int Int :left-assoc)   ; subtraction
+        (+ Int Int Int :left-assoc)
+        (* Int Int Int :left-assoc)
+        (** Int Int Int)              ; exponentiation
+        (div Int Int Int :left-assoc)
+        (mod Int Int Int)
+        (abs Int Int)
+        (<= Int Int Bool :chainable)
+        (<  Int Int Bool :chainable)
+        (>= Int Int Bool :chainable)
+        (>  Int Int Bool :chainable)
+       )
+
+ :funs-description
+ "All ranked function symbols of the form
+    ((_ divisible n) Int Bool)
+  where n is a positive numeral.
+ "
+
+ :values
+ "The set of values for the sort Int consists of
+  - all numerals,
+  - all terms of the form (- n) where n is a numeral other than 0.
+ "
+
+ :definition
+ "For every expanded signature, the instance of Ints with that
+  signature is the theory consisting of all Sigma-models that interpret:
+
+  - the sort Int as the set of all integer numbers,
+
+  - each numeral as the corresponding natural number,
+
+  - (_ divisible n) as the function mapping to true all and only
+    the integers that are divisible by n,
+
+  - abs as the absolute value function,
+
+  - div and mod according to Boute's Euclidean definition [1], that
+    is, so as to satify the formula
+
+    (forall ((m Int) (n Int))
+      (=> (distinct n 0)
+          (let ((q (div m n)) (r (mod m n)))
+            (and (= m (+ (* n q) r))
+                 (<= 0 r (- (abs n) 1))))))
+
+  - ** as exponentiation if the second argument is non-negative,
+    and as 0, otherwise
+
+  - the other function symbols of Ints as expected.
+
+  References:
+  [1] Boute, Raymond T. (April 1992).
+      The Euclidean definition of the functions div and mod.
+      ACM Transactions on Programming Languages and Systems
+      (TOPLAS) ACM Press. 14 (2): 127 - 144.
+      doi:10.1145/128861.128862.
+ "
+
+ :notes
+ "Regardless of sign of m,
+  when n is positive, (div m n) is the floor of the rational number
+  m/n; when n is negative, (div m n) is the ceiling of m/n.
+
+  This contrasts with alternative but less robust definitions of
+  div and mod where (div m n) is
+  - always the integer part of m/n (rounding towards 0), or
+  - always the floor of x/y (rounding towards -infinity).
+ "
+
+ :notes
+ "See note in the Reals theory declaration about terms of the form
+  (/ t 0). The same observation applies here to terms of the form
+  (div t 0) and (mod t 0).
+ "
+)
+
+\end{lstlisting}
+
+\section{Justification}
+
+While working on this proposal, several question have been discussed by the authors of this document, and may require further discussion in the community.
+
+\subsection{Associativity}
+
+Exponentiation is usually right-associative.
+%
+However, the authors agree that the use of exponentiation in an associative manner is far less common than for other associative operators like addition or multiplication.
+%
+Thus, declaring it as right-associative may cause bugs and confusion, and therefore keeping it strictly binary appears to be the better choice.
+
+\subsection{Semantics for Negative Exponents}
+
+We discussed several possibilities for the semantics of exponentiation with negative exponents.\footnote{\url{https://github.com/ffrohn/exp-smt-lib/issues/2}}
+%
+We think that the following two variants are best:
+%
+\begin{itemize}
+\item exponentiation with a negative exponent is defined to be zero, as in the proposal above
+\item exponentiation with a negative exponent is treated like an uninterpreted function, as in the case of division by zero
+\end{itemize}
+%
+The first version is motivated by defining $b^{-n} = 1 \mathrel{\mathsf{div}} b^n = 0$, and its advantage is that it avoids partial / uninterpreted functions.
+%
+The advantage of the second version is that it's least surprising from a user's perspective, in particular for users that are aware of the handling of division by zero in SMT-LIB.
+
+In the proposal above, we chose the first variant, as it was the consensus in an earlier discussion on that matter among the CVC5 developers.\footnote{\url{https://github.com/cvc5/cvc5/pull/10237}}
+
+\subsection{Name of the Function Symbol for Exponentiation}
+
+We considered several names, and identified {\tt **} and {\tt pow} as the best options.\footnote{\url{https://github.com/ffrohn/exp-smt-lib/issues/1}}
+%
+In the proposal, we chose {\tt **}, as SMT-LIB usually uses ``operators'' (like {\tt +}, {\tt *}, etc.) instead of ``abbreviations'' if possible.
+%
+Note that we preferred {\tt **} over {\tt \^{}}, as the latter may be confused with bitwise XOR.
+
+\subsection{Unary Exponential Functions}
+
+We also considered including unary functions for exponentiation with fixed bases into the proposal:
+%
+\begin{lstlisting}[language=Lisp]
+All ranked function symbols of the form
+  ((n iexp _) Int Int)
+where n is a positive numeral.
+\end{lstlisting}
+%
+The motivation is that the extension of {\tt LIA} with one of these function symbols (which is also known as Semenov Arithmetic) is decidable, whereas the extension of {\tt LIA} with a binary function for exponentiation is undecidable.
+
+We did not include such unary function symbols for simplicity.
+
+\subsection{Logics}
+
+If exponentiation gets incorporated into the {\tt Ints} theory, then all existing logics that refer to it have to be adapted in order to exclude exponentiation.
+%
+Moreover, new logics that allow exponentiation should be defined.
+%
+We propose to define (at least) the following additional logics (names to be discussed):
+%
+\begin{itemize}
+\item {\tt EIA}: {\tt NIA} + exponentiation
+\item {\tt QF\_EIA}: {\tt QF\_NIA} + exponentiation
+\item {\tt UFEIA}: {\tt UFNIA} + exponentiation
+\end{itemize}
+%
+An extension of {\tt LIA} with exponentiation can simulate multiplication, so presumably, such a logic is not required.
+
+\bibliography{refs}
+
+\end{document}
