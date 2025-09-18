@@ -51,13 +51,13 @@
 
 We propose to extend the SMT-LIB theory {\tt Ints} with exponentiation.
 %
-Such an extension is motivated by various use cases, e.g.:
+Such an extension is motivated by various use cases, e.g.:\footnote{Further information on use cases and available benchmarks can be found here: \url{https://github.com/ffrohn/exp-smt-lib/issues/5}}
 %
 \begin{itemize}
 \item SMT with parametric bit-vectors \cite{bitvec}
 \item automatic verification of infinite state systems \cite{swine}
 \item automatic verification of solutions for recurrence equations \cite{swine2}
-\item deductive verification with Caesar \cite{caesar}\footnote{\url{https://github.com/ffrohn/exp-smt-lib/issues/5\#issuecomment-3233893588}}
+\item deductive verification with Caesar \cite{caesar}
 \end{itemize}
 
 \section{Proposal}
@@ -118,8 +118,11 @@ The following proposal is based on the SMT-LIB theory {\tt Ints}.\footnote{\url{
             (and (= m (+ (* n q) r))
                  (<= 0 r (- (abs n) 1))))))
 
-  - ** as exponentiation if the second argument is non-negative,
-    and as 0, otherwise
+  - (** m n) as exponentiation (i.e., m^n) if the second argument
+    is non-negative, and as
+      (A) 0 or
+      (B) uninterpreted function,
+    otherwise
 
   - the other function symbols of Ints as expected.
 
@@ -157,7 +160,7 @@ While working on this proposal, several question have been discussed by the auth
 
 \subsection{Associativity}
 
-Exponentiation is usually right-associative.
+Exponentiation\footnote{The details of the discussion are available here: \url{https://github.com/ffrohn/exp-smt-lib/issues/6}} is usually right-associative.
 %
 However, the authors agree that the use of exponentiation in an associative manner is far less common than for other associative operators like addition or multiplication.
 %
@@ -165,7 +168,7 @@ Thus, declaring it as right-associative may cause bugs and confusion, and theref
 
 \subsection{Semantics for Negative Exponents}
 
-We discussed several possibilities for the semantics of exponentiation with negative exponents.\footnote{\url{https://github.com/ffrohn/exp-smt-lib/issues/2}}
+We\footnote{The details of the discussion are available here: \url{https://github.com/ffrohn/exp-smt-lib/issues/2}} discussed several possibilities for the semantics of exponentiation with negative exponents.
 %
 We think that the following two variants are best:
 %
@@ -178,11 +181,9 @@ The first version is motivated by defining $b^{-n} = 1 \mathrel{\mathsf{div}} b^
 %
 The advantage of the second version is that it's least surprising from a user's perspective, in particular for users that are aware of the handling of division by zero in SMT-LIB.
 
-In the proposal above, we chose the first variant, as it was the consensus in an earlier discussion on that matter among the CVC5 developers.\footnote{\url{https://github.com/cvc5/cvc5/pull/10237}}
-
 \subsection{Name of the Function Symbol for Exponentiation}
 
-We considered several names, and identified {\tt **} and {\tt pow} as the best options.\footnote{\url{https://github.com/ffrohn/exp-smt-lib/issues/1}}
+We\footnote{The details of the discussion are available here: \url{https://github.com/ffrohn/exp-smt-lib/issues/1}} considered several names, and identified {\tt **} and {\tt pow} as the best options.
 %
 In the proposal, we chose {\tt **}, as SMT-LIB usually uses ``operators'' (like {\tt +}, {\tt *}, etc.) instead of ``abbreviations'' if possible.
 %
@@ -190,7 +191,7 @@ Note that we preferred {\tt **} over {\tt \^{}}, as the latter may be confused w
 
 \subsection{Unary Exponential Functions}
 
-We also considered including unary functions for exponentiation with fixed bases into the proposal:
+We\footnote{The details of the discussion are available here: \url{https://github.com/ffrohn/exp-smt-lib/issues/3}} also considered including unary functions for exponentiation with fixed bases into the proposal:
 %
 \begin{lstlisting}[language=Lisp]
 All ranked function symbols of the form
@@ -204,7 +205,7 @@ We did not include such unary function symbols for simplicity.
 
 \subsection{Logics}
 
-If exponentiation gets incorporated into the {\tt Ints} theory, then all existing logics that refer to it have to be adapted in order to exclude exponentiation.
+If\footnote{The details of the discussion are available here: \url{https://github.com/ffrohn/exp-smt-lib/issues/4}} exponentiation gets incorporated into the {\tt Ints} theory, then all existing logics that refer to it have to be adapted in order to exclude exponentiation.
 %
 Moreover, new logics that allow exponentiation should be defined.
 %
