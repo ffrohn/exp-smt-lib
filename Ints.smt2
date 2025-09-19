@@ -56,8 +56,7 @@
             (and (= m (+ (* n q) r))
                  (<= 0 r (- (abs n) 1))))))
 
-  - (** m n) as exponentiation (i.e., m^n) if the second argument is
-    non-negative, and as
+  - ** as exponentiation if the second argument is non-negative, and as
       (A) 0 or
       (B) uninterpreted function,
     otherwise
