@@ -182,13 +182,15 @@ We\footnote{The details of the discussion are available here: \url{https://githu
 We think that the following two variants are best:
 %
 \begin{itemize}
-\item exponentiation with a negative exponent is defined to be zero, as in the proposal above
+\item exponentiation with a negative exponent is defined to be zero
 \item exponentiation with a negative exponent is treated like an uninterpreted function, as in the case of division by zero
 \end{itemize}
 %
 The first version is motivated by defining $b^{-n} = 1 \mathrel{\mathsf{div}} b^n = 0$, and its advantage is that it avoids partial / uninterpreted functions.
 %
 The advantage of the second version is that it's least surprising from a user's perspective, in particular for users that are aware of the handling of division by zero in SMT-LIB.
+
+Since both variants have their benefits, we included both of them in the proposal above, i.e., further discussions in the community are required to make a decision.
 
 \subsection{Name of the Function Symbol for Exponentiation}
 
@@ -207,6 +209,8 @@ All ranked function symbols of the form
   ((n iexp _) Int Int)
 where n is a positive numeral.
 \end{lstlisting}
+%
+Here, \lstinline{iexp} abbreviates ``integer exponentiation''.
 %
 The motivation is that the extension of {\tt LIA} with one of these function symbols (which is also known as Semenov Arithmetic) is decidable, whereas the extension of {\tt LIA} with a binary function for exponentiation is undecidable.
 
