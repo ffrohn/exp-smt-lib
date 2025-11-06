@@ -3,8 +3,9 @@
 \usepackage{url}
 \usepackage{hyperref}
 \usepackage{listings}
-\usepackage{xcolor}
+\usepackage[dvipsnames]{xcolor}
 \usepackage{authblk}
+\usepackage{amsmath}
 
 \definecolor{codegreen}{rgb}{0,0.6,0}
 \definecolor{codegray}{rgb}{0.5,0.5,0.5}
@@ -127,11 +128,16 @@ The following proposal is based on the SMT-LIB theory {\tt Ints}.\footnote{\url{
             (and (= m (+ (* n q) r))
                  (<= 0 r (- (abs n) 1))))))
 
-  - ** as exponentiation if the second argument is non-negative,
-    and as
-      (A) 0 or
-      (B) uninterpreted function,
-    otherwise
+  - ** as exponentiation if the second argument is non-negative.
+    So in particular, (= (** 0 0) 1) holds.
+    If n is negative, then ** is defined as to satisfy the formula
+
+    (= (** m n) (div 1 (** m (- n))))
+
+    So the following holds for all negative integers n:
+    - (= (** 0 n) (div 1 0))
+    - (= (** m n) (** m (- n))) if (= (abs m) 1)
+    - (= (** m n) 0)            if (> (abs m) 1)
 
   - the other function symbols of Ints as expected.
 
@@ -182,15 +188,24 @@ We\footnote{The details of the discussion are available here: \url{https://githu
 We think that the following two variants are best:
 %
 \begin{itemize}
-\item exponentiation with a negative exponent is defined to be zero
+\item for all $n > 0$, we define $b^{-n} = 1 \mathrel{\mathsf{div}} b^n$, i.e.,
+  \[
+    b^{-n} =
+    \begin{cases}
+      1 \mathrel{\mathsf{div}} 0 & \text{if } \phantom{|}b\phantom{|} = 0\\
+      b^n & \text{if } |b| = 1\\
+      0 & \text{if } |b| > 1
+    \end{cases}
+  \]
+  For the first case, the usual treatment of division by zero in SMT-LIB applies, i.e., the term $1 \mathrel{\mathsf{div}} 0$ is meaningful, but its interpretation is not restricted by the {\tt Ints} theory.
 \item exponentiation with a negative exponent is treated like an uninterpreted function, as in the case of division by zero
 \end{itemize}
 %
-The first version is motivated by defining $b^{-n} = 1 \mathrel{\mathsf{div}} b^n = 0$, and its advantage is that it avoids partial / uninterpreted functions.
+The advantage of the first variant is that it avoids introducing further partial / uninterpreted functions.
 %
 The advantage of the second version is that it's least surprising from a user's perspective, in particular for users that are aware of the handling of division by zero in SMT-LIB.
-
-Since both variants have their benefits, we included both of them in the proposal above, i.e., further discussions in the community are required to make a decision.
+%
+After consulting with the SMT-LIB coordinators, we propose the first variant.
 
 \subsection{Name of the Function Symbol for Exponentiation}
 
@@ -218,7 +233,7 @@ We did not include such unary function symbols for simplicity.
 
 \subsection{Logics}
 
-If\footnote{The details of the discussion are available here: \url{https://github.com/ffrohn/exp-smt-lib/issues/4}} exponentiation gets incorporated into the {\tt Ints} theory, then all existing logics that refer to it have to be adapted in order to exclude exponentiation.
+{\color{BrickRed} If\footnote{The details of the discussion are available here: \url{https://github.com/ffrohn/exp-smt-lib/issues/4}} exponentiation gets incorporated into the {\tt Ints} theory, then all existing logics that refer to it have to be adapted in order to exclude exponentiation.}
 %
 Moreover, new logics that allow exponentiation should be defined.
 %
