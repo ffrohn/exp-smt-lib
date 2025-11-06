@@ -56,10 +56,16 @@
             (and (= m (+ (* n q) r))
                  (<= 0 r (- (abs n) 1))))))
 
-  - ** as exponentiation if the second argument is non-negative, and as
-      (A) 0 or
-      (B) uninterpreted function,
-    otherwise
+  - ** as exponentiation if the second argument is non-negative.
+    So in particular, (= (** 0 0) 1) holds.
+    If n is negative, then ** is defined as to satisfy the formula
+
+    (= (** m n) (div 1 (** m (- n))))
+
+    So the following holds for all negative integers n:
+    - (= (** 0 n) (div 1 0))
+    - (= (** m n) (** m (- n))) if (= (abs m) 1)
+    - (= (** m n) 0)            if (> (abs m) 1)
 
   - the other function symbols of Ints as expected.
 
